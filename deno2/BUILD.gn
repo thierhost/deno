@@ -76,11 +76,9 @@ source_set("deno_nosnapshot") {
   configs += [ ":deno_config" ]
 }
 
-# This allows us to v8/src/base/ libraries.
 config("deno_config") {
-  include_dirs = [
-    "v8",
-  ]
+  cflags = [ "-Qunused-arguments" ]
+  include_dirs = [ "v8" ] # This allows us to v8/src/base/ libraries.
   configs = [ "v8:external_config" ]
 }
 
