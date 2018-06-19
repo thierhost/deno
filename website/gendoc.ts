@@ -22,24 +22,12 @@ export class GenDoc {
   readonly entries: types.DocEntry[] = [];
 
   /**
-   * We iterate source code twice, this number represent which step
-   * we're currently in (one or two)
-   */
-  protected round = 1;
-
-  /**
-   * Array of used identifiers, filled in first iteration.
-   * Used to detect if we should put something in documentation or not.
-   * (ex: We fill it with export property names, so we can figure out if a
-   *  class, function, etc is exported.)
-   */
-  protected identifiers: string[] = [];
-
-  /**
    * globally exported name -> local name
    */
   protected exports = new Map<string, string>();
   protected checker: ts.TypeChecker;
+  protected sourceFile: ts.SourceFile;
+  protected serialized: string[] = [];
 
   constructor(public fileName: string, public options: ts.CompilerOptions) {
     // TODO Get source code instead of file name.
@@ -47,27 +35,26 @@ export class GenDoc {
     this.checker = program.getTypeChecker();
     for (const sourceFile of program.getSourceFiles()) {
       if (!sourceFile.isDeclarationFile) {
-        // Each documentation must contain all of the exported data
-        // including classes, functions, etc.
-        // Regarding that we should iterate over source file nodes twice.
-        //
-        // First we should find out what should be placed inside the doc.
-        // GenDoc.identifiers is an array of identifiers we should look for
-        // in next step, so just push to this.identifiers for now.
+        this.sourceFile = sourceFile;
         ts.forEachChild(sourceFile, this.visit.bind(this));
-        this.round += 1; // == 2
-        // At last, we visit all the nodes for one more time and now
-        // it's time to push data to GenDoc.entries.
-        ts.forEachChild(sourceFile, this.visit.bind(this));
+        break;
       }
     }
   }
 
-  // Call correct visitor based on node's kind.
+  // Calls correct visitor based on node's kind.
   protected visit(node: ts.Node) {
     // tslint:disable-next-line:no-any
     const kind = (ts as any).SyntaxKind[node.kind];
-    if (this.round > 1) return;
+    if (this[kind]) {
+      this[kind].call(this, node);
+    }
+  }
+
+  // Class serializer based on node's kind.
+  protected serialize(node: ts.Node) {
+    // tslint:disable-next-line:no-any
+    const kind = "Serialize" + (ts as any).SyntaxKind[node.kind];
     if (this[kind]) {
       this[kind].call(this, node);
     }
@@ -76,18 +63,37 @@ export class GenDoc {
   // VISITORS
   // No non-visitor method should be place below this line.
   ExportDeclaration(node: ts.ExportDeclaration) {
-    if (this.round > 1) return;
     for (const e of node.exportClause.elements) {
       if (!e.name) return;
       const name = e.name.escapedText as string;
       let propertyName = name;
       if (e.propertyName) propertyName = e.propertyName.escapedText as string;
-      if (this.identifiers.indexOf(propertyName) < 0) {
-        this.identifiers.push(propertyName);
-      }
+      // tslint:disable-next-line:no-any
+      const exportedSymbol = (this.sourceFile as any).locals.get(propertyName);
+      const exportedNode = exportedSymbol.declarations[0];
+      this.serialize(exportedNode);
       this.exports.set(name, propertyName);
     }
   }
+
+  ClassDeclaration(node: ts.ClassDeclaration) {
+    if (isClassExported(node)) this.SerializeClassDeclaration(node);
+  }
+
+  // Serializers
+  // No non-serializer method should be place below this line.
+  SerializeClassDeclaration(node: ts.ClassDeclaration) {
+    if (!node.name) return;
+    const name = node.name.escapedText as string;
+    if (this.serialized.indexOf(name) > -1) return;
+    this.serialized.push(name);
+    console.log("Serialize %s", name);
+  }
+}
+
+// Utility functions
+function isClassExported(node: ts.Node): boolean {
+  return (ts.getCombinedModifierFlags(node) & ts.ModifierFlags.Export) !== 0;
 }
 
 // DEVELOPMENT PLAYGROUND
