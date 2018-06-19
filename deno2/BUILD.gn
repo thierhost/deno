@@ -80,7 +80,6 @@ source_set("deno_nosnapshot") {
 config("deno_config") {
   include_dirs = [
     "v8",
-    "$target_gen_dir/v8",
   ]
   configs = [ "v8:external_config" ]
 }
