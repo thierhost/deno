@@ -28,7 +28,7 @@ executable("deno") {
     ":msg_proto",
     "//third_party/protobuf:protoc_lib",
   ]
-  public_configs = [ ":public_v8_base_config" ]
+  configs += [ ":deno_config" ]
 }
 
 executable("mock_runtime_test") {
@@ -43,8 +43,8 @@ executable("mock_runtime_test") {
     ":deno_nosnapshot",
     "//testing/gtest:gtest",
   ]
-  include_dirs = [ target_gen_dir ]
   defines = [ "DENO_MOCK_RUNTIME" ]
+  configs += [ ":deno_config" ]
 }
 
 static_library("libdeno") {
@@ -56,10 +56,7 @@ static_library("libdeno") {
     ":create_snapshot_deno",
     ":deno_nosnapshot",
   ]
-  public_configs = [
-    "v8:libplatform_config",
-    ":public_v8_base_config",
-  ]
+  configs += [ ":deno_config" ]
 }
 
 source_set("deno_nosnapshot") {
@@ -76,18 +73,16 @@ source_set("deno_nosnapshot") {
     "v8:v8_libplatform",
     "v8:v8_libsampler",
   ]
-  public_configs = [
-    "v8:libplatform_config",
-    ":public_v8_base_config",
-  ]
+  configs += [ ":deno_config" ]
 }
 
 # This allows us to v8/src/base/ libraries.
-config("public_v8_base_config") {
+config("deno_config") {
   include_dirs = [
     "v8",
     "$target_gen_dir/v8",
   ]
+  configs = [ "v8:external_config" ]
 }
 
 executable("snapshot_creator") {
@@ -97,6 +92,7 @@ executable("snapshot_creator") {
   deps = [
     ":deno_nosnapshot",
   ]
+  configs += [ ":deno_config" ]
 }
 
 proto_library("msg_proto") {
