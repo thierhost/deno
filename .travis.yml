@@ -24,6 +24,6 @@ install:
  - gclient sync --no-history
  - (cd js; yarn)
  - gn gen $BUILD_PATH --args='cc_wrapper="ccache"'
- - ninja -j3 -C $BUILD_PATH mock_runtime_test
+ - ninja -j3 -C $BUILD_PATH mock_runtime_test deno
 script:
  - $BUILD_PATH/mock_runtime_test

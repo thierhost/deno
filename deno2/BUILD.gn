@@ -77,7 +77,6 @@ source_set("deno_nosnapshot") {
 }
 
 config("deno_config") {
-  cflags = [ "-Wno-error=unused-command-line-argument" ]
   include_dirs = [ "v8" ] # This allows us to v8/src/base/ libraries.
   configs = [ "v8:external_config" ]
 }
