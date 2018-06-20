@@ -16,7 +16,6 @@ before_install: |
     rm -rf $DEPOT_TOOLS_PATH
     git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git $DEPOT_TOOLS_PATH
   fi
-  python $DEPOT_TOOLS_PATH/update_depot_tools_toggle.py --disable
 install:
  - env
  - export PATH=$PATH:$DEPOT_TOOLS_PATH
@@ -24,7 +23,6 @@ install:
  - gclient sync --no-history
  - (cd js; yarn)
  - gn gen $BUILD_PATH --args='cc_wrapper="ccache"'
- - ninja -j4 -C $BUILD_PATH mock_runtime_test deno
+ - ninja -j3 -C $BUILD_PATH mock_runtime_test
 script:
  - $BUILD_PATH/mock_runtime_test
- - $BUILD_PATH/deno
