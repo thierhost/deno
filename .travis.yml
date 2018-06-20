@@ -6,7 +6,6 @@ cache:
   ccache: true
   directories:
    - deno2/js/node_modules/
-   - deno2/v8
    - $DEPOT_TOOLS_PATH
 env:
   global:
