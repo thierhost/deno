@@ -19,7 +19,7 @@ rust_library("libc") {
   ]
 }
 
-executable("deno") {
+v8_executable("deno") {
   sources = [
     "main.cc",
   ]
@@ -28,10 +28,10 @@ executable("deno") {
     ":msg_proto",
     "//third_party/protobuf:protoc_lib",
   ]
-  configs += [ ":deno_config" ]
+  configs = [ ":deno_config" ]
 }
 
-executable("mock_runtime_test") {
+v8_executable("mock_runtime_test") {
   testonly = true
   sources = [
     "file_util_test.cc",
@@ -44,10 +44,10 @@ executable("mock_runtime_test") {
     "//testing/gtest:gtest",
   ]
   defines = [ "DENO_MOCK_RUNTIME" ]
-  configs += [ ":deno_config" ]
+  configs = [ ":deno_config" ]
 }
 
-static_library("libdeno") {
+v8_static_library("libdeno") {
   complete_static_lib = true
   sources = [
     "from_snapshot.cc",
@@ -56,10 +56,10 @@ static_library("libdeno") {
     ":create_snapshot_deno",
     ":deno_nosnapshot",
   ]
-  configs += [ ":deno_config" ]
+  configs = [ ":deno_config" ]
 }
 
-source_set("deno_nosnapshot") {
+v8_source_set("deno_nosnapshot") {
   sources = [
     "deno.cc",
     "deno_internal.h",
@@ -73,7 +73,7 @@ source_set("deno_nosnapshot") {
     "v8:v8_libplatform",
     "v8:v8_libsampler",
   ]
-  configs += [ ":deno_config" ]
+  configs = [ ":deno_config" ]
 }
 
 config("deno_config") {
@@ -81,14 +81,14 @@ config("deno_config") {
   configs = [ "v8:external_config" ]
 }
 
-executable("snapshot_creator") {
+v8_executable("snapshot_creator") {
   sources = [
     "snapshot_creator.cc",
   ]
   deps = [
     ":deno_nosnapshot",
   ]
-  configs += [ ":deno_config" ]
+  configs = [ ":deno_config" ]
 }
 
 proto_library("msg_proto") {
